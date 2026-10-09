@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E6A51">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Buku Jam Kerja</title>
+<script>window.BJK_STANDALONE=true;</script>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: satu kolom ponsel — bilah bulan di atas, tab Catat / Rekap / Gaji, kartu hari sebagai buku catatan */
+:root{
+  --bg:#EEF1EC; --surface:#FBFCFA; --ink:#17221E; --muted:#5B6A63; --line:#D3DBD5;
+  --accent:#1E6A51; --accent-soft:#DCEBE3; --warn:#B4532A; --warn-soft:#F5E2D8; --caution:#8A6A10;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111815; --surface:#18211D; --ink:#E5ECE7; --muted:#97A69E; --line:#2C3933;
+  --accent:#6CC9A3; --accent-soft:#1D3A2E; --warn:#EE9A72; --warn-soft:#3F261B; --caution:#E1BE58; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111815; --surface:#18211D; --ink:#E5ECE7; --muted:#97A69E; --line:#2C3933;
+  --accent:#6CC9A3; --accent-soft:#1D3A2E; --warn:#EE9A72; --warn-soft:#3F261B; --caution:#E1BE58; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 48px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:4px}
+h1{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:1.9rem;line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:0;font-size:.9rem}
+.monthbar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}
+.monthbar strong{flex:1;text-align:center;font-family:var(--f-display);font-stretch:85%;font-size:1.15rem;font-weight:700}
+.iconbtn{width:40px;height:40px;border-radius:8px;border:none;background:transparent;color:var(--ink);font-size:1.3rem;cursor:pointer}
+.iconbtn:hover{background:var(--bg)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--line);padding:4px;border-radius:10px}
+.tabs button{border:none;background:transparent;color:var(--muted);font:600 .95rem var(--f-body);padding:9px 4px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--f-display);font-stretch:85%;font-size:1.1rem;font-weight:700;margin:0}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:420px){.grid3{grid-template-columns:1fr 1fr}}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.82rem;font-weight:600}
+.hint{font-size:.78rem;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+input[type=time],input[type=number],.money{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+textarea{resize:vertical;min-height:44px}
+.btn{border:none;border-radius:9px;padding:11px 16px;font:600 .95rem var(--f-body);cursor:pointer;background:var(--accent);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--warn);border:1px solid var(--warn)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.preview{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--f-mono);font-size:.8rem;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.chip.ot{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.chip.cut{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.flag{color:var(--caution);border-color:var(--caution);background:transparent}
+.days{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.day{display:grid;grid-template-columns:52px 1fr auto;gap:12px;padding:12px 14px;border-top:1px solid var(--line);align-items:start;cursor:pointer;background:none;border-left:none;border-right:none;border-bottom:none;text-align:left;color:inherit;font:inherit;width:100%}
+.day:first-child{border-top:none}
+.day:hover{background:var(--bg)}
+.dnum{font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:1.6rem;line-height:1}
+.dname{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dmain{min-width:0;display:flex;flex-direction:column;gap:5px}
+.dtime{font-family:var(--f-mono);font-size:.9rem}
+.dnote{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
+.dkind{font-size:.72rem;color:var(--muted)}
+.empty{padding:24px 16px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
+.empty strong{color:var(--ink);font-family:var(--f-display);font-stretch:85%;font-size:1.05rem}
+.totals{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tot{border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tot.ot{background:var(--accent-soft);color:var(--accent)}
+.tot.cut{background:var(--warn-soft);color:var(--warn)}
+.tot .big{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:1.55rem;line-height:1.1;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.tot .small{font-family:var(--f-mono);font-size:.82rem}
+@media (max-width:380px){.totals{grid-template-columns:1fr}}
+.net{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-top:2px solid var(--ink);padding-top:12px}
+.net .big{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:1.4rem;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.tablebox{overflow-x:auto}
+.notice{font-size:.85rem;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.notice.warn{border-color:var(--caution);color:var(--caution)}
+.formula{font-family:var(--f-mono);font-size:.82rem;background:var(--bg);border-radius:8px;padding:10px;overflow-x:auto;white-space:pre}
+.xbox{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:10px;background:var(--accent-soft)}
+.xbox label{color:var(--accent)}
+.xbox input{background:var(--surface)}
+.qbtn{cursor:pointer;background:var(--surface)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:.88rem;z-index:5}
+.status{font-size:.75rem;color:var(--muted);text-align:center}
+details summary{cursor:pointer;font-weight:600}
+@media (prefers-reduced-motion:no-preference){.tabs button,.day{transition:background .15s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Buku Jam Kerja</h1>
+    <p class="sub">Catat jam masuk–pulang, lembur, dan waktu kerja yang terpakai untuk urusan lain. Rekap dihitung dengan aturan PP 35/2021.</p>
+  </header>
+
+  <div class="monthbar">
+    <button class="iconbtn" id="prevM" aria-label="Bulan sebelumnya">‹</button>
+    <strong id="monthLabel">—</strong>
+    <button class="iconbtn" id="nextM" aria-label="Bulan berikutnya">›</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-catat" aria-selected="true" data-tab="catat">Catat</button>
+    <button role="tab" id="tab-rekap" aria-selected="false" data-tab="rekap">Rekap</button>
+    <button role="tab" id="tab-gaji" aria-selected="false" data-tab="gaji">Gaji</button>
+  </div>
+
+  <!-- CATAT -->
+  <section class="panel" id="p-catat">
+    <div class="notice warn" id="needGaji" hidden>Isi dulu pendapatan rutin bulan ini di tab <b>Gaji</b>. Tanpa itu rupiah lembur dan korupsi waktu tidak bisa dihitung.</div>
+    <form class="card" id="entryForm" autocomplete="off">
+      <div class="row" style="justify-content:space-between"><h2 id="formTitle">Catat hari kerja</h2><span class="chip" id="editingTag" hidden>mengubah</span></div>
+      <div class="grid2">
+        <div class="field"><label for="fDate">Tanggal</label><input type="date" id="fDate" required></div>
+        <div class="field"><label for="fKind">Jenis hari</label><select id="fKind"></select></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label for="fIn">Masuk</label><input type="time" id="fIn"></div>
+        <div class="field"><label for="fOut">Pulang</label><input type="time" id="fOut"></div>
+        <div class="field"><label for="fBreak">Istirahat (menit)</label><input type="number" id="fBreak" min="0" step="5" inputmode="numeric"></div>
+      </div>
+      <div class="row"><button class="btn ghost" type="button" id="noOffice" style="padding:6px 12px;font-size:.85rem">Tidak ke kantor hari ini</button></div>
+      <div class="xbox">
+        <div class="field">
+          <label for="fExtra">Lembur tambahan di luar kantor (menit)</label>
+          <input type="number" id="fExtra" min="0" step="5" inputmode="numeric" placeholder="0">
+          <div class="row" id="extraQuick"><button type="button" class="chip qbtn" data-add="15">+15</button><button type="button" class="chip qbtn" data-add="30">+30</button><button type="button" class="chip qbtn" data-add="60">+60</button><button type="button" class="chip qbtn" data-add="0">reset</button></div>
+          <span class="hint">Zoom atau tugas dadakan dari rumah setelah jam kerja. Waktu ini ditambahkan ke jam kerja hari itu, lalu lemburnya dihitung bersama.</span>
+        </div>
+        <div class="field"><label for="fExtraKet">Keterangan lembur tambahan</label><input type="text" id="fExtraKet" placeholder="mis. Zoom dengan pimpinan 20:00–21:30"></div>
+      </div>
+      <div class="field">
+        <label for="fCut">Korupsi waktu (menit)</label>
+        <input type="number" id="fCut" min="0" step="5" inputmode="numeric" placeholder="0">
+        <span class="hint">Waktu di jam kerja yang dipakai untuk urusan pribadi: istirahat kelebihan, main HP, keluar kantor. Datang telat atau pulang cepat sudah dihitung otomatis dari jam masuk–pulang.</span>
+      </div>
+      <div class="field"><label for="fNote">Catatan</label><textarea id="fNote" rows="1" placeholder="mis. lembur closing stok"></textarea></div>
+      <div class="preview" id="preview"></div>
+      <div class="row">
+        <button class="btn" type="submit" id="saveBtn">Simpan</button>
+        <button class="btn ghost" type="button" id="cancelEdit" hidden>Batal</button>
+        <button class="btn danger" type="button" id="delBtn" hidden>Hapus</button>
+      </div>
+      <div class="row" id="delConfirm" hidden>
+        <span class="hint">Hapus catatan tanggal ini?</span>
+        <button class="btn danger" type="button" id="delYes">Ya, hapus</button>
+        <button class="btn ghost" type="button" id="delNo">Tidak</button>
+      </div>
+    </form>
+    <div class="days" id="dayList"></div>
+  </section>
+
+  <!-- REKAP -->
+  <section class="panel" id="p-rekap" hidden>
+    <div class="totals">
+      <div class="tot ot"><span class="label" style="color:inherit">Hak upah lembur</span><span class="big" id="tOtRp">Rp0</span><span class="small" id="tOtH">0 jam</span></div>
+      <div class="tot cut"><span class="label" style="color:inherit">Nilai korupsi waktu</span><span class="big" id="tCutRp">Rp0</span><span class="small" id="tCutH">0 jam</span></div>
+    </div>
+    <div class="card">
+      <div class="net"><span>Selisih (lembur − korupsi)</span><span class="big" id="tNet">Rp0</span></div>
+      <table><tbody id="sumRows"></tbody></table>
+    </div>
+    <div id="flags" class="panel" style="gap:8px"></div>
+    <div class="card">
+      <h2>Rincian per hari</h2>
+      <div class="tablebox"><table>
+        <thead><tr><th>Tgl</th><th class="num">Kerja</th><th class="num">Lembur</th><th class="num">Rp lembur</th><th class="num">Korupsi</th><th class="num">Rp korupsi</th></tr></thead>
+        <tbody id="detailRows"></tbody>
+      </table></div>
+      <div class="row"><button class="btn ghost" type="button" id="csvBtn">Unduh rekap (CSV)</button></div>
+    </div>
+    <details class="card">
+      <summary>Cara hitung</summary>
+      <div class="formula" id="formulaBox"></div>
+      <p class="hint" style="margin:0">Lembur hari kerja: jam pertama 1,5× upah sejam, jam berikutnya 2×. Lembur hari libur/istirahat: bertingkat 2×, 3×, 4× sesuai pola hari kerja. Upah sejam = 1/173 × dasar upah. Nilai korupsi waktu memakai upah sejam yang sama (1×). Batas lembur menurut PP 35/2021: 4 jam/hari dan 18 jam/minggu. Aturan perusahaan yang lebih menguntungkan pekerja tetap berlaku.</p>
+    </details>
+  </section>
+
+  <!-- GAJI -->
+  <section class="panel" id="p-gaji" hidden>
+    <form class="card" id="gajiForm" autocomplete="off">
+      <h2 id="gajiTitle">Pendapatan rutin bulanan</h2>
+      <div class="field"><label for="gPokok">Gaji pokok (Rp) <span style="color:var(--warn)">*</span></label><input class="money" type="number" id="gPokok" min="0" step="1000" inputmode="numeric" required></div>
+      <div class="field"><label for="gTetap">Tunjangan tetap (Rp)</label><input class="money" type="number" id="gTetap" min="0" step="1000" inputmode="numeric"><span class="hint">Dibayar tiap bulan tanpa melihat kehadiran: tunjangan jabatan, keluarga, dll.</span></div>
+      <div class="field"><label for="gTidak">Tunjangan tidak tetap (Rp)</label><input class="money" type="number" id="gTidak" min="0" step="1000" inputmode="numeric"><span class="hint">Bergantung kehadiran: uang makan, transport harian.</span></div>
+      <div class="field"><label for="gUmk">UMK/UMP daerah (Rp, opsional)</label><input class="money" type="number" id="gUmk" min="0" step="1000" inputmode="numeric"><span class="hint">Jika upah di bawah upah minimum, lembur dihitung dari upah minimum.</span></div>
+      <div class="field"><label for="gPola">Pola hari kerja</label>
+        <select id="gPola"><option value="5">5 hari kerja (8 jam/hari)</option><option value="6">6 hari kerja (7 jam/hari)</option></select>
+      </div>
+      <div class="formula" id="rateBox"></div>
+      <div class="row"><button class="btn" type="submit">Simpan untuk bulan ini</button></div>
+      <span class="hint">Angka ini disimpan per bulan. Bulan baru otomatis memakai angka terakhir sampai Anda mengubahnya.</span>
+    </form>
+    <div class="card">
+      <h2>Cadangan data</h2>
+      <p class="hint" style="margin:0">Simpan semua catatan ke satu file, lalu buka file itu di aplikasi versi lain atau di HP baru.</p>
+      <div class="row">
+        <button class="btn ghost" type="button" id="exportBtn">Unduh cadangan</button>
+        <label class="btn ghost" for="importFile" style="display:inline-block">Pulihkan dari file</label>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <div class="row" id="importConfirm" hidden>
+        <span class="hint" id="importInfo"></span>
+        <button class="btn" type="button" id="importYes">Gabungkan</button>
+        <button class="btn ghost" type="button" id="importNo">Batal</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="status" id="storeStatus">Menyambungkan penyimpanan…</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const BULAN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const HARI=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+const KINDS={
+  kerja:{label:"Hari kerja"},
+  pendek:{label:"Hari kerja terpendek (5 jam)",only6:true},
+  libur:{label:"Libur / istirahat mingguan"},
+  liburPendek:{label:"Libur resmi di hari kerja terpendek",only6:true},
+  cuti:{label:"Cuti / izin / sakit"}
+};
+const rp=n=>"Rp"+Math.round(n||0).toLocaleString("id-ID");
+const jam=m=>{m=Math.round(m||0);const h=Math.floor(m/60),r=m%60;return h+"j"+(r?" "+String(r).padStart(2,"0")+"m":"")};
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+
+/* ---------- state ---------- */
+const today=new Date();
+let cur={y:today.getFullYear(),m:today.getMonth()+1};
+let profil={pola:5,gaji:null};      // last-used salary + pattern
+let month={gaji:null,hari:{}};      // current month doc
+let editing=null;
+
+/* ---------- storage: db per-person, fallback localStorage ---------- */
+let db=null,uid=null,unsubP=null,unsubM=null,dl=null;
+const chains={};
+function queueWrite(path,fn){chains[path]=(chains[path]||Promise.resolve()).then(fn).catch(e=>{toast(e&&e.code==="quota_exceeded"?"Penyimpanan penuh. Hapus catatan lama.":"Gagal menyimpan. Coba lagi.");});return chains[path];}
+const mkey=()=>"bulan-"+cur.y+"-"+pad(cur.m);
+const LS="bjk:";
+function lsGet(k){try{return JSON.parse(localStorage.getItem(LS+k)||"null")}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v))}catch(e){}}
+
+function save(key,obj){
+  if(db&&uid){const ref=db.doc("data/users/"+uid+"/"+key);const body=JSON.parse(JSON.stringify(obj));return queueWrite(key,()=>ref.set(body));}
+  lsSet(key,obj);return Promise.resolve();
+}
+function loadMonth(){
+  if(unsubM){unsubM();unsubM=null}
+  if(db&&uid){
+    month={gaji:null,hari:{}};render();
+    unsubM=db.doc("data/users/"+uid+"/"+mkey()).onSnapshot(s=>{const d=s.exists?s.data():null;month={gaji:d&&d.gaji?{...d.gaji}:null,hari:d&&d.hari?JSON.parse(JSON.stringify(d.hari)):{}};render();},()=>{});
+  }else{
+    const d=lsGet(mkey());month={gaji:d&&d.gaji||null,hari:d&&d.hari||{}};render();
+  }
+}
+async function initStore(){
+  try{
+    if(!window.BJK_STANDALONE&&window.claude&&window.claude.use){
+      const [d,u,dd]=await Promise.all([window.claude.use("db"),window.claude.use("user"),window.claude.use("downloads")]);
+      dl=dd;
+      if(d&&u){const id=await u.id();if(id){db=d;uid=id;}}
+    }
+  }catch(e){}
+  if(db&&uid){
+    $("storeStatus").textContent="Tersimpan di akun Claude Anda, hanya Anda yang bisa melihatnya.";
+    unsubP=db.doc("data/users/"+uid+"/profil").onSnapshot(s=>{if(s.exists){const d=s.data();profil={pola:d.pola||5,gaji:d.gaji?{...d.gaji}:null};fillGajiForm();render();}},()=>{});
+  }else{
+    $("storeStatus").textContent="Data tersimpan di perangkat ini. Unduh cadangan secara rutin dari tab Gaji.";
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+    const p=lsGet("profil");if(p)profil=p;
+  }
+  fillGajiForm();loadMonth();
+}
+
+/* ---------- calculations ---------- */
+function gajiAktif(){return month.gaji||profil.gaji}
+function upahSejam(g){
+  if(!g||!(g.pokok>0))return null;
+  const pokokTetap=(+g.pokok||0)+(+g.tetap||0),total=pokokTetap+(+g.tidak||0);
+  let dasar=pokokTetap,aturan="Gaji pokok + tunjangan tetap (100%)";
+  if((+g.tidak||0)>0&&pokokTetap<0.75*total){dasar=0.75*total;aturan="75% dari seluruh upah (pokok + tetap < 75%)";}
+  if((+g.umk||0)>0&&dasar<+g.umk){dasar=+g.umk;aturan="Upah minimum (upah di bawah UMK/UMP)";}
+  return {dasar,aturan,total,rate:dasar/173};
+}
+function tiers(kind,pola){
+  if(kind==="kerja"||kind==="pendek")return [[1,1.5],[Infinity,2]];
+  if(kind==="liburPendek")return [[5,2],[1,3],[3,4],[Infinity,4]];
+  return pola==6?[[7,2],[1,3],[3,4],[Infinity,4]]:[[8,2],[1,3],[3,4],[Infinity,4]];
+}
+function kaliLembur(hours,kind,pola){let left=hours,sum=0;for(const [len,x] of tiers(kind,pola)){const t=Math.min(left,len);sum+=t*x;left-=t;if(left<=0)break;}return sum;}
+function normalMin(kind,pola){if(kind==="libur"||kind==="liburPendek"||kind==="cuti")return 0;if(kind==="pendek")return 300;return pola==6?420:480;}
+function toMin(t){if(!t)return null;const [h,m]=t.split(":").map(Number);return h*60+m;}
+function hitungHari(e,pola,rate){
+  const a=toMin(e.masuk),b=toMin(e.pulang),extra=+e.extra||0;
+  const office=a!=null&&b!=null;
+  if(!office&&!extra)return null;
+  let kantor=0;if(office){let span=b-a;if(span<=0)span+=1440;kantor=Math.max(0,span-(+e.istirahat||0));}
+  const kerja=kantor+extra;
+  const normal=office?normalMin(e.jenis,pola):0;
+  const lembur=normal===0?(office||e.jenis!=="kerja"&&e.jenis!=="pendek"?kerja:extra):Math.max(0,kerja-normal);
+  const kurang=normal===0?0:Math.max(0,normal-kerja);
+  const manual=+e.korupsi||0;
+  const korupsi=kurang+manual;
+  const kali=kaliLembur(lembur/60,e.jenis,pola);
+  const flags=[];
+  if((e.jenis==="kerja"||e.jenis==="pendek")&&lembur>240)flags.push("lembur > 4 jam");
+  return {office,kantor,extra,kerja,normal,lembur,kurang,manual,korupsi,kali,rpLembur:rate?kali*rate:0,rpKorupsi:rate?korupsi/60*rate:0,flags};
+}
+function isoWeek(ds){const d=new Date(ds+"T00:00:00");const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));return t.getUTCFullYear()+"-W"+Math.ceil(((t-y0)/864e5+1)/7);}
+
+/* ---------- UI ---------- */
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2200);}
+function setTab(name){document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===name));["catat","rekap","gaji"].forEach(n=>$("p-"+n).hidden=n!==name);try{localStorage.setItem(LS+"tab",name)}catch(e){}}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
+function shiftMonth(d){let m=cur.m+d,y=cur.y;if(m<1){m=12;y--}if(m>12){m=1;y++}cur={y,m};resetForm();loadMonth();}
+$("prevM").onclick=()=>shiftMonth(-1);$("nextM").onclick=()=>shiftMonth(1);
+
+function fillKinds(){const sel=$("fKind"),v=sel.value||"kerja";sel.innerHTML="";for(const k in KINDS){if(KINDS[k].only6&&profil.pola!=6)continue;const o=document.createElement("option");o.value=k;o.textContent=KINDS[k].label;sel.appendChild(o);}sel.value=[...sel.options].some(o=>o.value===v)?v:"kerja";}
+function defaultDate(){const inMonth=today.getFullYear()===cur.y&&today.getMonth()+1===cur.m;return inMonth?ymd(today):cur.y+"-"+pad(cur.m)+"-01";}
+function resetForm(){editing=null;$("entryForm").reset();fillKinds();$("fDate").value=defaultDate();$("fIn").value="08:00";$("fOut").value=profil.pola==6?"16:00":"17:00";$("fBreak").value=60;$("fCut").value="";$("fExtra").value="";$("fExtraKet").value="";$("formTitle").textContent="Catat hari kerja";$("editingTag").hidden=true;$("cancelEdit").hidden=true;$("delBtn").hidden=true;$("delConfirm").hidden=true;$("saveBtn").textContent="Simpan";guessKind();preview();}
+function guessKind(){const d=new Date($("fDate").value+"T00:00:00");if(isNaN(d))return;const dow=d.getDay();if(dow===0||(profil.pola==5&&dow===6))$("fKind").value="libur";else if(profil.pola==6&&dow===6)$("fKind").value="pendek";else $("fKind").value="kerja";}
+function formEntry(){return {jenis:$("fKind").value,masuk:$("fIn").value,pulang:$("fOut").value,istirahat:+$("fBreak").value||0,korupsi:+$("fCut").value||0,catatan:$("fNote").value.trim(),extra:+$("fExtra").value||0,extraKet:$("fExtraKet").value.trim()};}
+$("noOffice").onclick=()=>{$("fIn").value="";$("fOut").value="";$("fBreak").value="";preview();$("fExtra").focus();};
+document.querySelectorAll(".qbtn").forEach(b=>b.addEventListener("click",()=>{const n=+b.dataset.add;$("fExtra").value=n?(+$("fExtra").value||0)+n:"";preview();}));
+function preview(){
+  const u=upahSejam(gajiAktif()),h=hitungHari(formEntry(),profil.pola,u&&u.rate),box=$("preview");box.innerHTML="";
+  if(!h)return;
+  const add=(t,c)=>{const s=document.createElement("span");s.className="chip "+(c||"");s.textContent=t;box.appendChild(s)};
+  add(h.office?"kerja "+jam(h.kerja)+(h.extra?" (kantor "+jam(h.kantor)+" + luar "+jam(h.extra)+")":""):"luar kantor "+jam(h.extra));
+  if(h.lembur)add("lembur "+jam(h.lembur)+(u?" · "+rp(h.rpLembur):""),"ot");
+  if(h.korupsi)add("korupsi "+jam(h.korupsi)+(u?" · "+rp(h.rpKorupsi):""),"cut");
+  h.flags.forEach(f=>add(f,"flag"));
+}
+["fDate","fKind","fIn","fOut","fBreak","fCut","fExtra"].forEach(id=>$(id).addEventListener("input",()=>{if(id==="fDate"&&!editing)guessKind();preview();}));
+$("fDate").addEventListener("change",()=>{const v=$("fDate").value;if(!v)return;const [y,m]=v.split("-").map(Number);if(y!==cur.y||m!==cur.m){cur={y,m};loadMonth();return;}if(!editing&&month.hari[v]){editDay(v);toast("Tanggal ini sudah ada catatannya, silakan tambahkan");}});
+
+$("entryForm").addEventListener("submit",e=>{
+  e.preventDefault();const d=$("fDate").value;if(!d)return;
+  const fe=formEntry();
+  if(!!fe.masuk!==!!fe.pulang){toast("Isi jam masuk dan pulang, atau kosongkan keduanya");return}
+  if(!fe.masuk&&!fe.extra){toast("Isi jam kantor atau lembur tambahan");return}
+  const [y,m]=d.split("-").map(Number);if(y!==cur.y||m!==cur.m){cur={y,m};loadMonth();}
+  if(editing&&editing!==d)delete month.hari[editing];
+  month.hari[d]=formEntry();
+  const doc={hari:month.hari};const g=gajiAktif();if(g)doc.gaji=g;month.gaji=g||null;
+  save(mkey(),doc).then(()=>toast(editing?"Catatan diperbarui":"Tersimpan"));
+  render();resetForm();
+});
+$("cancelEdit").onclick=resetForm;
+$("delBtn").onclick=()=>{$("delConfirm").hidden=false};
+$("delNo").onclick=()=>{$("delConfirm").hidden=true};
+$("delYes").onclick=()=>{if(!editing)return;delete month.hari[editing];const doc={hari:month.hari};if(month.gaji)doc.gaji=month.gaji;save(mkey(),doc).then(()=>toast("Dihapus"));render();resetForm();};
+
+function editDay(d){const e=month.hari[d];if(!e)return;editing=d;fillKinds();$("fDate").value=d;$("fKind").value=e.jenis;$("fIn").value=e.masuk||"";$("fOut").value=e.pulang||"";$("fBreak").value=e.istirahat||"";$("fCut").value=e.korupsi||"";$("fExtra").value=e.extra||"";$("fExtraKet").value=e.extraKet||"";$("fNote").value=e.catatan||"";$("formTitle").textContent="Ubah catatan";$("editingTag").hidden=false;$("cancelEdit").hidden=false;$("delBtn").hidden=false;$("saveBtn").textContent="Simpan perubahan";preview();setTab("catat");$("entryForm").scrollIntoView({behavior:"smooth",block:"start"});}
+
+function rows(){
+  const u=upahSejam(gajiAktif());
+  return Object.keys(month.hari).sort().map(d=>({d,e:month.hari[d],h:hitungHari(month.hari[d],profil.pola,u&&u.rate)})).filter(r=>r.h);
+}
+function render(){
+  $("monthLabel").textContent=BULAN[cur.m-1]+" "+cur.y;
+  const u=upahSejam(gajiAktif());
+  $("needGaji").hidden=!!u;
+  fillKinds();
+  // list
+  const list=$("dayList");list.innerHTML="";const R=rows();
+  if(!R.length){list.innerHTML='<div class="empty"><strong>Belum ada catatan di '+BULAN[cur.m-1]+'</strong><span>Isi jam masuk dan pulang di atas, lalu tekan Simpan. Lembur dan kekurangan jam dihitung otomatis.</span></div>';}
+  R.slice().reverse().forEach(({d,e,h})=>{
+    const dt=new Date(d+"T00:00:00");const b=document.createElement("button");b.type="button";b.className="day";b.onclick=()=>editDay(d);
+    const left=document.createElement("div");left.innerHTML='<div class="dnum"></div><div class="dname"></div>';left.querySelector(".dnum").textContent=dt.getDate();left.querySelector(".dname").textContent=HARI[dt.getDay()];
+    const mid=document.createElement("div");mid.className="dmain";
+    const t=document.createElement("div");t.className="dtime";t.textContent=h.office?e.masuk+"–"+e.pulang+" · kerja "+jam(h.kerja):"Tidak ke kantor · kerja "+jam(h.kerja);mid.appendChild(t);
+    if(h.extra){const x=document.createElement("div");x.className="dnote";x.style.color="var(--accent)";x.textContent="Luar kantor "+jam(h.extra)+(e.extraKet?": "+e.extraKet:"");mid.appendChild(x);}
+    const k=document.createElement("div");k.className="dkind";k.textContent=(KINDS[e.jenis]||{}).label||e.jenis;mid.appendChild(k);
+    const chips=document.createElement("div");chips.className="preview";
+    if(h.lembur){const c=document.createElement("span");c.className="chip ot";c.textContent="+"+jam(h.lembur);chips.appendChild(c)}
+    if(h.korupsi){const c=document.createElement("span");c.className="chip cut";c.textContent="−"+jam(h.korupsi);chips.appendChild(c)}
+    h.flags.forEach(f=>{const c=document.createElement("span");c.className="chip flag";c.textContent=f;chips.appendChild(c)});
+    if(chips.children.length)mid.appendChild(chips);
+    if(e.catatan){const n=document.createElement("div");n.className="dnote";n.textContent=e.catatan;mid.appendChild(n)}
+    const right=document.createElement("div");right.className="dtime";right.style.textAlign="right";
+    right.textContent=u?(h.rpLembur?"+"+rp(h.rpLembur):"")+(h.rpKorupsi?(h.rpLembur?"\n":"")+"−"+rp(h.rpKorupsi):""):"";right.style.whiteSpace="pre";
+    b.append(left,mid,right);list.appendChild(b);
+  });
+  // rekap
+  let S={kerja:0,lembur:0,korupsi:0,kurang:0,manual:0,rpL:0,rpK:0,kali:0,hari:R.length};const weeks={};
+  const tb=$("detailRows");tb.innerHTML="";
+  R.forEach(({d,h})=>{S.kerja+=h.kerja;S.lembur+=h.lembur;S.korupsi+=h.korupsi;S.kurang+=h.kurang;S.manual+=h.manual;S.rpL+=h.rpLembur;S.rpK+=h.rpKorupsi;S.kali+=h.kali;const w=isoWeek(d);weeks[w]=(weeks[w]||0)+h.lembur;
+    const tr=document.createElement("tr");[d.slice(8),jam(h.kerja),h.lembur?jam(h.lembur):"–",u&&h.rpLembur?rp(h.rpLembur):"–",h.korupsi?jam(h.korupsi):"–",u&&h.rpKorupsi?rp(h.rpKorupsi):"–"].forEach((v,i)=>{const td=document.createElement("td");td.textContent=v;if(i)td.className="num";tr.appendChild(td)});tb.appendChild(tr);});
+  if(!R.length)tb.innerHTML='<tr><td colspan="6" class="hint">Belum ada data bulan ini.</td></tr>';
+  $("tOtRp").textContent=u?rp(S.rpL):"Isi gaji dulu";$("tOtH").textContent=jam(S.lembur)+" · "+S.kali.toLocaleString("id-ID",{maximumFractionDigits:2})+" jam hitung";
+  $("tCutRp").textContent=u?rp(S.rpK):"Isi gaji dulu";$("tCutH").textContent=jam(S.korupsi);
+  $("tNet").textContent=u?(S.rpL-S.rpK<0?"−":"")+rp(Math.abs(S.rpL-S.rpK)):"–";
+  const sr=$("sumRows");sr.innerHTML="";
+  const g=gajiAktif();
+  [["Hari tercatat",S.hari+" hari"],["Total jam kerja",jam(S.kerja)],["Pendapatan rutin bulanan",g?rp((+g.pokok||0)+(+g.tetap||0)+(+g.tidak||0)):"–"],["Upah sejam (1/173)",u?rp(u.rate):"–"],["Korupsi: telat / pulang cepat",jam(S.kurang)],["Korupsi: dicatat manual",jam(S.manual)],["Perkiraan diterima + lembur",g&&u?rp((+g.pokok||0)+(+g.tetap||0)+(+g.tidak||0)+S.rpL):"–"]].forEach(([a,b])=>{const tr=document.createElement("tr");const t1=document.createElement("td");t1.textContent=a;const t2=document.createElement("td");t2.className="num";t2.textContent=b;tr.append(t1,t2);sr.appendChild(tr)});
+  const fl=$("flags");fl.innerHTML="";
+  Object.entries(weeks).forEach(([w,m])=>{if(m>18*60){const n=document.createElement("div");n.className="notice warn";n.textContent="Minggu "+w.split("-W")[1]+": lembur "+jam(m)+", melebihi batas 18 jam/minggu.";fl.appendChild(n)}});
+  const over=R.filter(r=>r.h.flags.length).length;if(over){const n=document.createElement("div");n.className="notice warn";n.textContent=over+" hari dengan lembur lebih dari 4 jam di hari kerja (batas PP 35/2021).";fl.appendChild(n)}
+  $("formulaBox").textContent=u?("Dasar upah   : "+rp(u.dasar)+"\n               ("+u.aturan+")\nUpah sejam   : "+rp(u.dasar)+" ÷ 173 = "+rp(u.rate)+"\nLembur       : "+S.kali.toLocaleString("id-ID",{maximumFractionDigits:2})+" jam hitung × "+rp(u.rate)+" = "+rp(S.rpL)+"\nKorupsi      : "+(S.korupsi/60).toLocaleString("id-ID",{maximumFractionDigits:2})+" jam × "+rp(u.rate)+" = "+rp(S.rpK)):"Isi gaji di tab Gaji untuk melihat perhitungan.";
+  rateInfo();preview();
+}
+function fillGajiForm(){const g=gajiAktif()||{};$("gPokok").value=g.pokok||"";$("gTetap").value=g.tetap||"";$("gTidak").value=g.tidak||"";$("gUmk").value=g.umk||"";$("gPola").value=String(profil.pola||5);$("gajiTitle").textContent="Pendapatan rutin "+BULAN[cur.m-1]+" "+cur.y;rateInfo();}
+function readGaji(){return {pokok:+$("gPokok").value||0,tetap:+$("gTetap").value||0,tidak:+$("gTidak").value||0,umk:+$("gUmk").value||0};}
+function rateInfo(){const u=upahSejam(readGaji());$("rateBox").textContent=u?("Total pendapatan : "+rp(u.total)+"\nDasar lembur     : "+rp(u.dasar)+"\n  "+u.aturan+"\nUpah sejam       : "+rp(u.rate)):"Isi gaji pokok untuk melihat upah sejam.";}
+["gPokok","gTetap","gTidak","gUmk"].forEach(id=>$(id).addEventListener("input",rateInfo));
+$("gajiForm").addEventListener("submit",e=>{
+  e.preventDefault();const g=readGaji();if(!(g.pokok>0)){toast("Gaji pokok wajib diisi");return}
+  profil={pola:+$("gPola").value,gaji:g};month.gaji=g;
+  save("profil",profil);save(mkey(),{gaji:g,hari:month.hari}).then(()=>toast("Gaji "+BULAN[cur.m-1]+" disimpan"));
+  render();resetForm();
+});
+const _render=render;render=function(){_render();$("gajiTitle").textContent="Pendapatan rutin "+BULAN[cur.m-1]+" "+cur.y;if(document.activeElement&&document.activeElement.closest&&!document.activeElement.closest("#gajiForm"))fillGajiForm();};
+
+async function giveFile(filename,text,type){
+  if(dl){try{await dl.save({filename,data:text});}catch(err){if(err&&err.code==="unavailable")toast("Unduhan tidak tersedia di tampilan ini");}return;}
+  try{const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);}catch(e){toast("Gagal mengunduh");}
+}
+async function allData(){
+  const out={};
+  if(db&&uid){const snap=await db.collection("data/users/"+uid).get();snap.docs.forEach(s=>{if(s.exists)out[s.id]=s.data();});}
+  else{try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith(LS)&&k!==LS+"tab"){out[k.slice(LS.length)]=JSON.parse(localStorage.getItem(k));}}}catch(e){}}
+  return out;
+}
+$("exportBtn").onclick=async()=>{try{const data=await allData();const n=Object.keys(data).filter(k=>k.startsWith("bulan-")).length;await giveFile("cadangan-buku-jam-kerja-"+ymd(new Date())+".json",JSON.stringify({app:"buku-jam-kerja",versi:1,dibuat:new Date().toISOString(),data},null,1),"application/json");toast("Cadangan "+n+" bulan dibuat");}catch(e){toast("Gagal membuat cadangan");}};
+let pendingImport=null;
+$("importFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j||j.app!=="buku-jam-kerja"||!j.data)throw 0;pendingImport=j.data;const months=Object.keys(j.data).filter(k=>/^bulan-\d{4}-\d{2}$/.test(k));let days=0;months.forEach(k=>days+=Object.keys(j.data[k].hari||{}).length);$("importInfo").textContent="File berisi "+months.length+" bulan, "+days+" hari. Catatan di tanggal yang sama akan diganti isi file.";$("importConfirm").hidden=false;}catch(err){toast("File ini bukan cadangan Buku Jam Kerja");}};r.readAsText(f);e.target.value="";});
+$("importNo").onclick=()=>{pendingImport=null;$("importConfirm").hidden=true;};
+$("importYes").onclick=async()=>{
+  if(!pendingImport)return;const src=pendingImport;pendingImport=null;$("importConfirm").hidden=true;
+  try{
+    const have=await allData();
+    for(const k of Object.keys(src)){
+      if(k==="profil"){if(!have.profil){await save("profil",src.profil);}continue;}
+      if(!/^bulan-\d{4}-\d{2}$/.test(k))continue;
+      const old=have[k]||{};const merged={hari:Object.assign({},old.hari||{},src[k].hari||{})};const g=old.gaji||src[k].gaji;if(g)merged.gaji=g;
+      await save(k,merged);
+    }
+    if(!(db&&uid)){const p=lsGet("profil");if(p)profil=p;fillGajiForm();}
+    loadMonth();toast("Data dipulihkan");
+  }catch(e){toast("Gagal memulihkan data");}
+};
+$("csvBtn").onclick=async()=>{
+  const u=upahSejam(gajiAktif());
+  const lines=[["tanggal","jenis","masuk","pulang","istirahat_menit","luar_kantor_menit","ket_luar_kantor","jam_kerja","lembur_menit","upah_lembur","korupsi_menit","nilai_korupsi","catatan"].join(",")];
+  rows().forEach(({d,e,h})=>lines.push([d,e.jenis,e.masuk||"",e.pulang||"",e.istirahat||0,e.extra||0,'"'+(e.extraKet||"").replace(/"/g,'""')+'"',(h.kerja/60).toFixed(2),h.lembur,u?Math.round(h.rpLembur):"",h.korupsi,u?Math.round(h.rpKorupsi):"",'"'+(e.catatan||"").replace(/"/g,'""')+'"'].join(",")));
+  await giveFile("rekap-jam-kerja-"+cur.y+"-"+pad(cur.m)+".csv","﻿"+lines.join("\n"),"text/csv");
+};
+
+try{const t=localStorage.getItem(LS+"tab");if(t)setTab(t)}catch(e){}
+resetForm();render();initStore();
+})();
+</script>
+
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}</script>
+</body>
+</html>
